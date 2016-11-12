@@ -7,26 +7,59 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using Microsoft.Bot.Connector;
 using Newtonsoft.Json;
+using System.Globalization;
 
 namespace BotWashy
 {
     [BotAuthentication]
     public class MessagesController : ApiController
     {
+        
         /// <summary>
         /// POST: api/Messages
         /// Receive a message from a user and reply to it
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
+
             if (activity.Type == ActivityTypes.Message)
             {
                 ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
                 // calculate something for us to return
                 int length = (activity.Text ?? string.Empty).Length;
+                Activity reply = null;
+                
 
-                // return our reply to the user
-                Activity reply = activity.CreateReply($"You sent {activity.Text} which was {length} characters");
+
+                if (activity.Text.Contains("test"))
+                {
+                    WebClient com = new WebClient();
+                    string result = com.getRequest();
+                    reply = activity.CreateReply($"{result}");
+
+                }
+                else if (activity.Text.ToLower().Contains("wash"))
+                {
+                    WebClient com = new WebClient();
+                    string correctDate = Controllers.dateFormat.getFormatedDateNow();
+                    string result = com.getDatesRequest(correctDate);
+                    
+                    
+
+                    string[] output = Controllers.dateFormat.getTimeslotsPlainText(result);
+                    for (int i = 0; i < output.Length; i++)
+                    {
+                        reply = activity.CreateReply($"{output[i]}");
+                        await connector.Conversations.ReplyToActivityAsync(reply);
+                    }
+                    //reply = activity.CreateReply($"{activity.ChannelId}");                                // Send to Matthias
+                }
+                else
+                {
+                    // return our reply to the user
+                    reply = activity.CreateReply($"You sent {activity.Text} which was {length} characters");
+                }
+                
                 await connector.Conversations.ReplyToActivityAsync(reply);
             }
             else
