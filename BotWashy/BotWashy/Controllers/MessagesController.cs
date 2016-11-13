@@ -30,6 +30,7 @@ namespace BotWashy
 
                     ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
 
+
                     // calculate something for us to return
                     int length = (activity.Text ?? string.Empty).Length;
                     Activity reply = null;
@@ -87,100 +88,125 @@ namespace BotWashy
                             string data = stateResponse.Content.ReadAsStringAsync().Result;
                             string rcvstate = Controllers.dateFormat.getStateFromJSON(data);
                             state = Convert.ToInt16(rcvstate);
-
-                            switch (state)
+                            
+                            if (activity.Attachments != null && activity.Attachments.Count > 0)
                             {
-                                case -1:
+                                Attachment attachedPic = activity.Attachments[0];
+                                string url = attachedPic.ContentUrl;
 
-                                    if (activity.Attachments != null && activity.Attachments.Count > 0)
-                                    {
-                                        Attachment attachedPic = activity.Attachments[0];
-                                        string url = attachedPic.ContentUrl;
+                                WebClient _editState = new WebClient();
+                                string _reserveResponse = await _editState.postReserveRequest(url, activity.From.Id, activity.ChannelId);
 
-                                        WebClient _editState = new WebClient();
-                                        string _reserveResponse = await _editState.postReserveRequest(url, activity.From.Id, activity.ChannelId);
+                                if (state == -1)
+                                {
+                                    string _editresponse = await _editState.putStateRequest(activity.Conversation.Id, "1");
+                                    reply = activity.CreateReply("Thank you! When do you want to do your laundry?");
+                                }
+                                else
+                                {
+                                    reply = activity.CreateReply("Thank you for the additional picture!\n" + createRandomCompliment());
+                                }
 
-                                        string _editresponse = await _editState.putStateRequest(activity.Conversation.Id, "1");
-                                        reply = activity.CreateReply("Thank you! When do you want to do your laundry?");
-                                    }
-                                    else
-                                    {
-                                        reply = activity.CreateReply("Don't be so shy :) Please send me a picture.");
-                                        // twilio calls you and plays song "Don't be so shy"
-                                    }
-                                    break;
-                                //expect phone number + create new user
-                                case 0:
-                                    //get phone number 
-                                    string phoneNumber = activity.Text;
-                                    string userName = activity.From.Name;
-                                    string userId = activity.From.Id;
-                                    string userChat = activity.ChannelId;
+                            }
+                            else
+                            {
+                                switch (state)
+                                {
+                                    case -1:
 
-                                    WebClient editState = new WebClient();
-                                    string editresponse = await editState.postNewUserRequest(phoneNumber, userName, userId, userChat);
-                                    editresponse = await editState.putStateRequest(activity.Conversation.Id, "-1");
-                                    reply = activity.CreateReply("Thank you! Please send me a picture to end your registration");
-                                    break;
-                                //find available time slot for date
-                                case 1:
-                                    WebClient com = new WebClient();
-                                    string correctDate = "";
-                                    if (activity.Text.ToLower().Contains("today") || activity.Text.ToLower().Contains("now"))
-                                    {
-                                        // Get available dates
-                                        correctDate = Controllers.dateFormat.getFormatedDateNow();
-                                    }
-                                    else if (activity.Text.ToLower().Contains("tomorrow"))
-                                    {
-                                        correctDate = Controllers.dateFormat.getFormatedDateTomorrow();
-                                    }
-                                    else
-                                    {
-                                        reply = activity.CreateReply("Unfortunately there are only free spots available today or tomorrow. What would you prefer?");
+                                        if (activity.Attachments != null && activity.Attachments.Count > 0)
+                                        {
+                                            Attachment attachedPic = activity.Attachments[0];
+                                            string url = attachedPic.ContentUrl;
+
+                                            WebClient _editState = new WebClient();
+                                            string _reserveResponse = await _editState.postReserveRequest(url, activity.From.Id, activity.ChannelId);
+
+                                            string _editresponse = await _editState.putStateRequest(activity.Conversation.Id, "1");
+                                            reply = activity.CreateReply("Thank you! When do you want to do your laundry?");
+                                        }
+                                        else
+                                        {
+                                            reply = activity.CreateReply("Don't be so shy :) Please send me a picture.");
+                                            // twilio calls you and plays song "Don't be so shy"
+                                        }
                                         break;
-                                    }
+                                    //expect phone number + create new user
+                                    case 0:
+                                        //get phone number 
+                                        string phoneNumber = activity.Text;
+                                        string userName = activity.From.Name;
+                                        string userId = activity.From.Id;
+                                        string userChat = activity.ChannelId;
 
-                                    //reply with all possible dates
-                                    string result = com.getDatesRequest(correctDate);
-                                    string[] output = Controllers.dateFormat.getTimeslotsPlainText(result);
-                                    for (int i = 0; i < output.Length; i++)
-                                    {
-                                        reply = activity.CreateReply($"{output[i]}");
-                                        await connector.Conversations.ReplyToActivityAsync(reply);
-                                    }
+                                        WebClient editState = new WebClient();
+                                        string editresponse = await editState.postNewUserRequest(phoneNumber, userName, userId, userChat);
+                                        editresponse = await editState.putStateRequest(activity.Conversation.Id, "-1");
+                                        reply = activity.CreateReply("Thank you! Please send me a picture to end your registration");
+                                        break;
+                                    //find available time slot for date
+                                    case 1:
+                                        WebClient com = new WebClient();
+                                        string correctDate = "";
+                                        if (activity.Text.ToLower().Contains("today") || activity.Text.ToLower().Contains("now"))
+                                        {
+                                            // Get available dates
+                                            correctDate = Controllers.dateFormat.getFormatedDateNow();
+                                        }
+                                        else if (activity.Text.ToLower().Contains("tomorrow"))
+                                        {
+                                            correctDate = Controllers.dateFormat.getFormatedDateTomorrow();
+                                        }
+                                        else
+                                        {
+                                            reply = activity.CreateReply("Unfortunately there are only free spots available today or tomorrow. What would you prefer?");
+                                            break;
+                                        }
 
-                                    editresponse = await com.putStateTimeRequest(activity.Conversation.Id, "2", correctDate);
-                                    reply = activity.CreateReply("Which hour do you wanna start?");
-                                    break;
-                                //reserve a specific time slot
-                                case 2:
-                                    string rcvdate = Controllers.dateFormat.getDateFromJSON(data);
-                                    string[] elements = rcvdate.Split(' ');
-                                    int month = int.Parse(elements[0]);
-                                    int days = int.Parse(elements[1]);
-                                    int year = int.Parse(elements[2]);
-                                    int min = int.Parse(elements[3].Split(':')[1]);
-                                    DateTime newDate = new DateTime(year, month, days, int.Parse(activity.Text), min, 0);
-                                    string formattedDate = Controllers.dateFormat.formatDateDot(newDate);
+                                        //reply with all possible dates
+                                        string result = com.getDatesRequest(correctDate);
+                                        string[] output = Controllers.dateFormat.getTimeslotsPlainText(result);
+                                        for (int i = 0; i < output.Length; i++)
+                                        {
+                                            reply = activity.CreateReply($"{output[i]}");
+                                            await connector.Conversations.ReplyToActivityAsync(reply);
+                                        }
 
-                                    WebClient reserveClient = new WebClient();
-                                    string reserveResponse = await reserveClient.postReserveRequest(formattedDate, activity.From.Id, activity.ChannelId);
+                                        editresponse = await com.putStateTimeRequest(activity.Conversation.Id, "2", correctDate);
+                                        reply = activity.CreateReply("Which hour do you wanna start?");
+                                        break;
+                                    //reserve a specific time slot
+                                    case 2:
+                                        string rcvdate = Controllers.dateFormat.getDateFromJSON(data);
+                                        string[] elements = rcvdate.Split(' ');
+                                        int month = int.Parse(elements[0]);
+                                        int days = int.Parse(elements[1]);
+                                        int year = int.Parse(elements[2]);
+                                        int min = int.Parse(elements[3].Split(':')[1]);
+                                        DateTime newDate = new DateTime(year, month, days, int.Parse(activity.Text.Trim()), min, 0);
+                                        string formattedDate = Controllers.dateFormat.formatDateDot(newDate);
 
-                                    editresponse = await reserveClient.putStateRequest(activity.Conversation.Id, "3");
-                                    var room = Controllers.dateFormat.getRoomFromJSON(reserveResponse);
-                                    reply = activity.CreateReply("Your slot has been reserved in Room " + room);
+                                        WebClient reserveClient = new WebClient();
+                                        string reserveResponse = await reserveClient.postReserveRequest(formattedDate, activity.From.Id, activity.ChannelId);
 
-                                    break;
-                                //start over state=1
-                                default:
-                                    WebClient newRound = new WebClient();
-                                    editresponse = await newRound.putStateRequest(activity.Conversation.Id, "1");
-                                    reply = activity.CreateReply("When do you want to do your laundry?");
-                                    break;
+                                        editresponse = await reserveClient.putStateRequest(activity.Conversation.Id, "3");
+                                        var room = Controllers.dateFormat.getRoomFromJSON(reserveResponse);
+                                        reply = activity.CreateReply("Your slot has been reserved in Room " + room);
+
+                                        break;
+                                    //start over state=1
+                                    default:
+                                        WebClient newRound = new WebClient();
+                                        editresponse = await newRound.putStateRequest(activity.Conversation.Id, "1");
+                                        reply = activity.CreateReply("When do you want to do your laundry?");
+                                        break;
+                                }
+
                             }
 
+
                         }
+
 
                         /*
                         // Get available dates
@@ -222,6 +248,26 @@ namespace BotWashy
 
             var response = Request.CreateResponse(HttpStatusCode.OK);
             return response;
+        }
+
+        private string createRandomCompliment()
+        {
+            Random rnd = new Random();
+            int randomIndex = rnd.Next(0, 5);
+            switch (randomIndex)
+            {
+                case 0:
+                    return "You look really pretty today!";
+                case 1:
+                    return "That's a really nice photo!";
+                case 3:
+                    return "Oh you look beautiful on this one!";
+                case 4:
+                    return "But you can upload a nicer one :p";
+                case 5:
+                    return "That really makes me want to see more of you! ;)";
+            }
+            return "";
         }
 
         private Activity HandleSystemMessage(Activity message)
