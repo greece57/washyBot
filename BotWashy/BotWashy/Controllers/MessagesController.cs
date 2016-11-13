@@ -28,9 +28,11 @@ namespace BotWashy
                 // calculate something for us to return
                 int length = (activity.Text ?? string.Empty).Length;
                 Activity reply = null;
-                
 
-
+                int state = 5555;
+            
+                //HttpResponseMessage response = client.GetAsync(backendIP + serverHello).Result;                         //GET STATUS RESPONSE
+                //string statusCode = response.StatusCode.ToString();   
                 if (activity.Text.Contains("test"))
                 {
                     WebClient com = new WebClient();
@@ -40,12 +42,49 @@ namespace BotWashy
                 }
                 else if (activity.Text.ToLower().Contains("wash"))
                 {
+                    //Check State
+                    WebClient stateCom = new WebClient();
+                    HttpResponseMessage stateResponse = stateCom.getConversationRequest(activity.Conversation.Id);
+                    string statusCode = stateResponse.StatusCode.ToString();                                                     //GET STATUS RESPONSE
+
+                    if (statusCode != "OK")
+                    {
+                        state = 5555;
+                        // check for user existence
+                        WebClient userCom = new WebClient();
+                        HttpResponseMessage userResponse = userCom.getUserRequest(activity.ChannelId,activity.From.Id);
+                        string statusCodeUser = userResponse.StatusCode.ToString();                                                     //GET STATUS RESPONSE
+
+                        if (statusCodeUser != "OK")
+                        {
+                            state = 5555;
+
+                            WebClient editState = new WebClient();
+                            string editresponse = await editState.putRequest(activity.Conversation.Id, "0");
+                            string statusPost = userResponse.StatusCode.ToString();
+
+                        }
+                        else
+                        {
+                            string data = stateResponse.Content.ReadAsStringAsync().Result;
+                            string rcvstate = Controllers.dateFormat.getStateFromJSON(data);
+                            state = Convert.ToInt16(rcvstate);
+                        }
+
+                    }
+                    else
+                    {
+                        string data = stateResponse.Content.ReadAsStringAsync().Result;
+                        string rcvstate = Controllers.dateFormat.getStateFromJSON(data);
+                        state = Convert.ToInt16(rcvstate);
+                    }
+
+
+                    // Get available dates
                     WebClient com = new WebClient();
                     string correctDate = Controllers.dateFormat.getFormatedDateNow();
                     string result = com.getDatesRequest(correctDate);
                     
-                    
-
                     string[] output = Controllers.dateFormat.getTimeslotsPlainText(result);
                     for (int i = 0; i < output.Length; i++)
                     {

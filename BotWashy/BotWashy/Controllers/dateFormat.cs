@@ -36,7 +36,17 @@ namespace BotWashy.Controllers
                 start[i] = json[i].start;
             }
             return start;
-        }  
+        }
+
+        public static string getStateFromJSON(string input)
+        {
+            dynamic json = JsonConvert.DeserializeObject(input);
+
+            string rcvState = json.state;
+            
+            return rcvState;
+        }
+
 
         public static string[] getEndDateFromJSON(string input)
         {
