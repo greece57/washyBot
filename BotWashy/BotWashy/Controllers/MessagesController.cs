@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Description;
 using Microsoft.Bot.Connector;
-using Newtonsoft.Json;
-using System.Globalization;
-using Twilio;
-using Twilio.Lookups;
 
 namespace BotWashy
 {
@@ -22,21 +16,7 @@ namespace BotWashy
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
-            /*
-            var accountSid = "{{AC7287cce52cd331042c68dda863805bf6}}";
-            var authToken = "{{c90be39667768626ae38d19c75728b71}}";
 
-            var twilio = new TwilioRestClient(accountSid, authToken);
-            var message = twilio.SendMessage(
-                "+4915735987500",
-                "+4915165151212",
-                "Hello from washy!"
-                );
-
-            Console.WriteLine(message.Sid);
-            Console.WriteLine("Press any key to continue");
-            Console.ReadKey();
-            */
             try
             {
 
@@ -48,18 +28,6 @@ namespace BotWashy
                     // calculate something for us to return
                     int length = (activity.Text ?? string.Empty).Length;
                     Activity reply = null;
-
-
-                    //Twilio
-                    var numberLookup = Services.TwilioLookupService.GetNumberInfo(activity.Text);
-                    if (numberLookup.RestException != null)
-                    {
-                        return activity.CreateReply("You entered an invalid phone number.");
-                    }
-                    var responseSMS = "Hello from washy!";
-
-                    return activity.CreateReply(responseSMS);
-
 
                     //Bot
                     int state = 5555;
@@ -233,29 +201,7 @@ namespace BotWashy
 
 
                         }
-
-
-                        /*
-                        // Get available dates
-                        WebClient com = new WebClient();
-                        string correctDate = Controllers.dateFormat.getFormatedDateNow();
-                        string result = com.getDatesRequest(correctDate);
-
-                        string[] output = Controllers.dateFormat.getTimeslotsPlainText(result);
-                        for (int i = 0; i < output.Length; i++)
-                        {
-                            reply = activity.CreateReply($"{output[i]}");
-                            await connector.Conversations.ReplyToActivityAsync(reply);
-                        }
-                        //reply = activity.CreateReply($"{activity.ChannelId}");      // Send to Matthias
-                        */
                     }
-                    /*
-                    else
-                    {
-                        // return our reply to the user
-                        reply = activity.CreateReply($"You sent {activity.Text} which was {length} characters");
-                    }*/
 
                     await connector.Conversations.ReplyToActivityAsync(reply);
                 }
