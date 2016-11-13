@@ -8,26 +8,40 @@ using System.Web.Http.Description;
 using Microsoft.Bot.Connector;
 using Newtonsoft.Json;
 using System.Globalization;
+using Twilio;
+using Twilio.Lookups;
 
 namespace BotWashy
 {
     [BotAuthentication]
     public class MessagesController : ApiController
     {
-        
         /// <summary>
         /// POST: api/Messages
         /// Receive a message from a user and reply to it
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
+            /*
+            var accountSid = "{{AC7287cce52cd331042c68dda863805bf6}}";
+            var authToken = "{{c90be39667768626ae38d19c75728b71}}";
 
+            var twilio = new TwilioRestClient(accountSid, authToken);
+            var message = twilio.SendMessage(
+                "+4915735987500",
+                "+4915165151212",
+                "Hello from washy!"
+                );
+
+            Console.WriteLine(message.Sid);
+            Console.WriteLine("Press any key to continue");
+            Console.ReadKey();
+            */
             try
             {
+
                 if (activity.Type == ActivityTypes.Message)
                 {
-                    
-
                     ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
 
 
@@ -35,6 +49,19 @@ namespace BotWashy
                     int length = (activity.Text ?? string.Empty).Length;
                     Activity reply = null;
 
+
+                    //Twilio
+                    var numberLookup = Services.TwilioLookupService.GetNumberInfo(activity.Text);
+                    if (numberLookup.RestException != null)
+                    {
+                        return activity.CreateReply("You entered an invalid phone number.");
+                    }
+                    var responseSMS = "Hello from washy!";
+
+                    return activity.CreateReply(responseSMS);
+
+
+                    //Bot
                     int state = 5555;
 
                     //HttpResponseMessage response = client.GetAsync(backendIP + serverHello).Result;                         //GET STATUS RESPONSE
@@ -120,7 +147,7 @@ namespace BotWashy
                                             string url = attachedPic.ContentUrl;
 
                                             WebClient _editState = new WebClient();
-                                            string _reserveResponse = await _editState.postReserveRequest(url, activity.From.Id, activity.ChannelId);
+                                            string _reserveResponse = await _editState.postPictureRequest(url, activity.From.Id, activity.ChannelId);
 
                                             string _editresponse = await _editState.putStateRequest(activity.Conversation.Id, "1");
                                             reply = activity.CreateReply("Thank you! When do you want to do your laundry?");
@@ -142,7 +169,7 @@ namespace BotWashy
                                         WebClient editState = new WebClient();
                                         string editresponse = await editState.postNewUserRequest(phoneNumber, userName, userId, userChat);
                                         editresponse = await editState.putStateRequest(activity.Conversation.Id, "-1");
-                                        reply = activity.CreateReply("Thank you! Please send me a picture to end your registration");
+                                        reply = activity.CreateReply("Thank you! Please send me a picture to finish your registration.");
                                         break;
                                     //find available time slot for date
                                     case 1:
