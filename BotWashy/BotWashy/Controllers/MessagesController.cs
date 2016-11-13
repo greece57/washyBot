@@ -85,6 +85,23 @@ namespace BotWashy
 
                         switch (state)
                         {
+                            case -1:
+                                if (activity.Attachments.Count > 0)
+                                {
+                                    Attachment attachedPic = activity.Attachments[0];
+                                    string url = attachedPic.ContentUrl;
+                                    WebClient _editState = new WebClient();
+                                    string _reserveResponse = await _editState.postReserveRequest(url, activity.From.Id, activity.ChannelId);
+
+                                    string _editresponse = await _editState.putStateRequest(activity.Conversation.Id, "1");
+                                    reply = activity.CreateReply("Thank you! When do you want to do your laundry?");
+                                }
+                                else
+                                {
+                                    reply = activity.CreateReply("Don't be so shy :) Please send me a picture.");
+                                    // twilio calls you and plays song "Don't be so shy"
+                                }
+                                break;
                             //expect phone number + create new user
                             case 0:
                                 //get phone number 
@@ -95,8 +112,8 @@ namespace BotWashy
 
                                 WebClient editState = new WebClient();
                                 string editresponse = await editState.postNewUserRequest(phoneNumber, userName, userId, userChat);
-                                editresponse = await editState.putStateRequest(activity.Conversation.Id, "1");
-                                reply = activity.CreateReply("Thank you! When do you want to do your laundry?");
+                                editresponse = await editState.putStateRequest(activity.Conversation.Id, "-1");
+                                reply = activity.CreateReply("Thank you! Please send me a picture to end your registration");
                                 break;
                             //find available time slot for date
                             case 1:

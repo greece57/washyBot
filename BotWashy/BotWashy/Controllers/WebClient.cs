@@ -184,5 +184,24 @@ namespace BotWashy
             }
             return response.Content;
         }
+
+        public async System.Threading.Tasks.Task<string> postPictureRequest(string url, string userId, string userChannel)
+        {
+            string inputUrl = serverUser + "/pic?" + userChannel + "=" + userId + "&url=" + url ;
+            var client = new RestClient(backendIP);
+            var request = new RestRequest(inputUrl, Method.POST);
+
+            IRestResponse response;
+            try
+            {
+                response = await client.Execute(request);
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+            return response.Content;
+        }
     }
 }
