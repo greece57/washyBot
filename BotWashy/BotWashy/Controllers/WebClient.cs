@@ -149,7 +149,7 @@ namespace BotWashy
 
         public async System.Threading.Tasks.Task<string> postNewUserRequest(string phoneNumber, string userName, string userId, string userChat)            // resource everything after backendIP ( LINK ) if Errors add "/" to end of "backendIP"
         {
-            string inputUrl = serverUsers + "/users?number=" + phoneNumber + "&name=" + userName + "&" + userChat + "=" + userId;
+            string inputUrl = serverUsers + "?number=" + phoneNumber + "&name=" + userName + "&" + userChat + "=" + userId;
             var client = new RestClient(backendIP);
             var request = new RestRequest(inputUrl, Method.POST);
 

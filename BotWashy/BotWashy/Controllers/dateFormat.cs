@@ -32,6 +32,18 @@ namespace BotWashy.Controllers
             return output;
         }
 
+        public static string formatDateDot(DateTime date)
+        {
+            string output = "";
+            output += date.Month + ".";
+            output += date.Day + ".";
+            output += date.Year + ".";
+            output += date.Hour + ":";
+            output += date.Minute;
+
+            return output;
+        }
+
         public static string[] getStartDateFromJSON(string input)
         {
             dynamic json = JsonConvert.DeserializeObject(input);

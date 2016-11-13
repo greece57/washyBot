@@ -127,7 +127,7 @@ namespace BotWashy
                                 }
 
                                 editresponse = await com.putStateTimeRequest(activity.Conversation.Id, "2", correctDate);
-                                reply = activity.CreateReply("Which Hour do you wanna start?");
+                                reply = activity.CreateReply("Which hour do you wanna start?");
                                 break;
                             //reserve a specific time slot
                             case 2:
@@ -138,7 +138,7 @@ namespace BotWashy
                                 int year = int.Parse(elements[2]);
                                 int min = int.Parse(elements[3].Split(':')[1]);
                                 DateTime newDate = new DateTime(year, month, days, int.Parse(activity.Text), min, 0);
-                                string formattedDate = Controllers.dateFormat.formatDate(newDate);
+                                string formattedDate = Controllers.dateFormat.formatDateDot(newDate);
 
                                 WebClient reserveClient = new WebClient();
                                 string reserveResponse = await reserveClient.postReserveRequest(formattedDate, activity.From.Id, activity.ChannelId);
