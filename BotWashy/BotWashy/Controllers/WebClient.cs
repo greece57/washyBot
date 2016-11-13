@@ -16,6 +16,8 @@ namespace BotWashy
         private const string serverHello = "/HelloWorld";
         private const string serverUser = "/user";
         private const string serverConversationId = "/conversation";
+        private const string serverUsers = "/users";
+        private const string serverReserve = "/reserve";
 
 
         public string getRequest()
@@ -102,7 +104,7 @@ namespace BotWashy
 
         }
 
-        public async System.Threading.Tasks.Task<string> putRequest(string conversationId, string state)            // resource everything after backendIP ( LINK ) if Errors add "/" to end of "backendIP"
+        public async System.Threading.Tasks.Task<string> putStateRequest(string conversationId, string state)            // resource everything after backendIP ( LINK ) if Errors add "/" to end of "backendIP"
         {
             string inputUrl = serverConversationId + "/" + conversationId + "/state?state=" + state;
             var client = new RestClient(backendIP);
@@ -124,7 +126,63 @@ namespace BotWashy
                 return ex.Message;
             }
             return response.Content;
+        }
 
+        public async System.Threading.Tasks.Task<string> putStateTimeRequest(string conversationId, string state, string time)            // resource everything after backendIP ( LINK ) if Errors add "/" to end of "backendIP"
+        {
+            string inputUrl = serverConversationId + "/" + conversationId + "/state?state=" + state + "&date=" + time;
+            var client = new RestClient(backendIP);
+            var request = new RestRequest(inputUrl, Method.PUT);
+           
+            IRestResponse response;
+            try
+            {
+                response = await client.Execute(request);
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+            return response.Content;
+        }
+
+        public async System.Threading.Tasks.Task<string> postNewUserRequest(string phoneNumber, string userName, string userId, string userChat)            // resource everything after backendIP ( LINK ) if Errors add "/" to end of "backendIP"
+        {
+            string inputUrl = serverUsers + "/users?number=" + phoneNumber + "&name=" + userName + "&" + userChat + "=" + userId;
+            var client = new RestClient(backendIP);
+            var request = new RestRequest(inputUrl, Method.POST);
+
+            IRestResponse response;
+            try
+            {
+                response = await client.Execute(request);
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+            return response.Content;
+        }
+
+        public async System.Threading.Tasks.Task<string> postReserveRequest(string date, string userId, string userChannel)
+        {
+            string inputUrl = serverReserve + "/" + date + "?" + userChannel + "=" + userId;
+            var client = new RestClient(backendIP);
+            var request = new RestRequest(inputUrl, Method.POST);
+
+            IRestResponse response;
+            try
+            {
+                response = await client.Execute(request);
+
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+            return response.Content;
         }
     }
 }

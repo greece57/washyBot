@@ -14,6 +14,11 @@ namespace BotWashy.Controllers
             return formatDate(DateTime.Now);
         }
 
+        public static string getFormatedDateTomorrow()
+        {
+            return formatDate(DateTime.Now.AddDays(1));
+        }
+
         public static string formatDate(DateTime date)
         {
             string output = "";
@@ -41,10 +46,15 @@ namespace BotWashy.Controllers
         public static string getStateFromJSON(string input)
         {
             dynamic json = JsonConvert.DeserializeObject(input);
-
             string rcvState = json.state;
-            
             return rcvState;
+        }
+
+        public static string getDateFromJSON(string input)
+        {
+            dynamic json = JsonConvert.DeserializeObject(input);
+            string rcvDate = json.date;
+            return rcvDate;
         }
 
 
@@ -66,16 +76,23 @@ namespace BotWashy.Controllers
 
             int sLength = starts.Length;
             int eLength = starts.Length;
-            string[] output = new string [sLength+1];
+            string[] output = new string [sLength];
             if (sLength == eLength)
             {
                 for (int i = 0; i< sLength; i++)
                 {
                     output[i] += $"A timeslot from {starts[i]} to {ends[i]} is available. " + Environment.NewLine;
                 }
-                output[sLength] += "Which Timeslot do you prefer?";
+               // output[sLength] += "Which Timeslot do you prefer?";
             }
             return output;
+        }
+
+        internal static object getRoomFromJSON(string input)
+        {
+            dynamic json = JsonConvert.DeserializeObject(input);
+            string rcvDate = json.room;
+            return rcvDate;
         }
     }
 }
