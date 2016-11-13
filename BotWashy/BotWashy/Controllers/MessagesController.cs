@@ -95,7 +95,7 @@ namespace BotWashy
                                 string url = attachedPic.ContentUrl;
 
                                 WebClient _editState = new WebClient();
-                                string _reserveResponse = await _editState.postReserveRequest(url, activity.From.Id, activity.ChannelId);
+                                string _reserveResponse = await _editState.postPictureRequest(url, activity.From.Id, activity.ChannelId);
 
                                 if (state == -1)
                                 {
